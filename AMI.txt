@@ -1,0 +1,115 @@
+========================================
+AMI Name: UbuntuHadoopAMI_Nalinaksh_Gaur
+
+AMI Id  : ami-874789ea
+
+AMI Description : Ubuntu AMI with openjdk-7-jdk, Hadoop-2.7.2 & some general Hadoop configurations applicable for both namenode and datanodes
+========================================
+
+Steps used to create this AMI:
+
+1. Launch an EC2 instance using Amazon Ubuntu AMI from AWS console
+
+2. Connect to this instance using ssh:
+   
+   ssh -i pem_key_filename ubuntu@public_dns
+
+   where pem_key_filename is the permissions key, downloaded from AWS earlier
+   public_dns is the Public DNS address of the instance
+
+3. On namenode create a config file ~/.ssh/config, which will be used for passowrdless ssh between namenode and datanodes, with the following contents (set HostName to actual public dns and IdentityFile to actual permissions key):
+
+   Host namenode
+   HostName namenode_public_dns
+   User ubuntu
+   IdentityFile ~/.ssh/pem_key_filename
+
+   Host datanode1
+   HostName datanode1_public_dns
+   User ubuntu
+   IdentityFile ~/.ssh/pem_key_filename
+
+   Host datanode2
+   HostName datanode2_public_dns
+   User ubuntu
+   IdentityFile ~/.ssh/pem_key_filename
+
+   Host datanode3
+   HostName datanode3_public_dns
+   User ubuntu
+   IdentityFile ~/.ssh/pem_key_filename 
+
+*NOTE*: Set up a config file in the ~/.ssh directory on your local machine as well so that we do not have to specify the pem key and host address every time we SSH into a node from our local machine. 
+
+4. Install Java:
+ 
+   sudo apt-get update
+   sudo apt-get install openjdk-7-jdk   
+
+5. Download and Install Hadoop-2.7.2:
+
+   wget http://apache.mirrors.tds.net/hadoop/common/hadoop-2.7.2/hadoop-2.7.2.tar.gz -P ~/Downloads
+   sudo tar zxvf ~/Downloads/hadoop-* -C /usr/local
+   sudo mv /usr/local/hadoop-* /usr/local/hadoop
+
+6. Add Hadoop and Java Environment variables to ~/.profile:
+     
+     export JAVA_HOME=/usr
+     export PATH=$PATH:$JAVA_HOME/bin
+     export HADOOP_HOME=/usr/local/hadoop
+     export PATH=$PATH:$HADOOP_HOME/bin
+     export HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop 
+
+   - Source the profile:
+     . ~/.profile
+
+7. Common Hadoop Configurations for namenode and datanodes:
+
+   Following files are modified:
+
+     (a) $HADOOP_CONF_DIR/hadoop-env.sh
+
+     # Change the location of JAVA_HOME. The java implementation to use.
+     export JAVA_HOME=/usr
+
+     (b) $HADOOP_CONF_DIR/core-site.xml (Declare the Hadoop File System, replace 'namenode_public_dns' with actual Public DNS of instances )
+     
+     <configuration>
+     <property>
+      <name>fs.defaultFS</name>
+      <value>hdfs://namenode_public_dns:9000</value>
+    </property>
+    </configuration>
+     
+     (c) $HADOOP_CONF_DIR/yarn-site.xml (Declare location of Resource Manager, replace 'namenode_public_dns' with actual Public DNS of instances)
+         <configuration>
+         <property>
+           <name>yarn.nodemanager.aux-services</name>
+           <value>mapreduce_shuffle</value>
+        </property> 
+        <property>
+          <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+          <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+        </property>
+        <property>
+          <name>yarn.resourcemanager.hostname</name>
+          <value>namenode_public_dns</value>
+        </property>
+        </configuration>
+
+     (d) $HADOOP_CONF_DIR/mapred-site.xml (Create a copy of the template, Declare location of Job Tracker, replace 'namenode_public_dns' with actual Public DNS of instances)
+       
+         sudo cp $HADOOP_CONF_DIR/mapred-site.xml.template $HADOOP_CONF_DIR/mapred-site.xml
+
+         <configuration>
+         <property>
+           <name>mapreduce.jobtracker.address</name>
+           <value>namenode_public_dns:54311</value>
+         </property>
+         <property>
+           <name>mapreduce.framework.name</name>
+           <value>yarn</value>
+         </property>
+         </configuration>
+
+=================================================================
