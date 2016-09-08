@@ -1,4 +1,4 @@
-# Hadoop-MapReduce-
+# Hadoop-MapReduce-Application
 
 This file describes the implementation of a Hadoop application that takes as input the 50 Wikipedia web pages dedicated to the US states (we will provide these files for consistency) and outputs:
 
