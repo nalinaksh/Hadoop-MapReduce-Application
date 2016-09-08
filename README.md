@@ -1,4 +1,11 @@
 # Hadoop-MapReduce-
+
+This file describes the implementation of a Hadoop application that takes as input the 50 Wikipedia web pages dedicated to the US states (we will provide these files for consistency) and outputs:
+
+- How many times each of the words “education”, “politics”, “sports”, and “agriculture” appear in the files.
+
+- Rank the top 3 states for each of these words (i.e., which state pages use each of these words the most).
+
 Instructions for creating 4 node cluster from the AMI specified in AMI.txt
 
 1. Go to the AWS EC2 management console, in the navigation panel go to AMIs, under the public images, search for 'ami-874789ea'
